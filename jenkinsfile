@@ -1,0 +1,73 @@
+podTemplate(label: 'jenkins-slave-pod', 
+  containers: [
+    containerTemplate( name: 'jnlp', image: 'jenkins/inbound-agent:jdk11' ),
+    containerTemplate( name: 'maven', image: 'maven:3.6.2-jdk-8', command: 'cat', ttyEnabled: true ),
+    // containerTemplate( name: 'node', image: 'node:8.16.2-alpine3.10', command: 'cat', ttyEnabled: true ),
+    // containerTemplate( name: 'docker', image: 'docker', command: 'cat', ttyEnabled: true ),
+    containerTemplate(name: 'podman', image: 'mgoltzsche/podman:4.2.1', ttyEnabled: true, command: 'cat'),
+    // containerTemplate(name: 'busybox', image: 'busybox', ttyEnabled: true, command: 'cat'),
+  ],
+  volumes: [ 
+    persistentVolumeClaim(claimName: 'jenkins-pvc', mountPath: '/var/jenkins_home'), 
+  ]
+)
+{
+    node('jenkins-slave-pod') {
+
+        stage('Maven') {
+            container('maven') {
+                    sh 'mvn -version'
+            }
+        }
+
+        stage('Podman') {
+            container('podman') {
+                    sh 'podman run --help'
+            }
+        }
+
+        stage('embedded') {
+            container('jnlp') {
+                jdk = tool name: 'openjdk-8'
+                env.JAVA_HOME = "${jdk}"
+
+                echo "jdk installation path is: ${jdk}"
+
+                // next 2 are equivalents
+                sh "${jdk}/bin/java -version"
+
+                // note that simple quote strings are not evaluated by Groovy
+                // substitution is done by shell script using environment
+                sh '$JAVA_HOME/bin/java -version'
+            }
+
+            container('jnlp') {
+                jdk = tool name: 'openjdk-11'
+                env.JAVA_HOME = "${jdk}"
+
+                echo "jdk installation path is: ${jdk}"
+
+                // next 2 are equivalents
+                sh "${jdk}/bin/java -version"
+
+                // note that simple quote strings are not evaluated by Groovy
+                // substitution is done by shell script using environment
+                sh '$JAVA_HOME/bin/java -version'
+            }
+
+                container('jnlp') {
+                jdk = tool name: 'openjdk-17'
+                env.JAVA_HOME = "${jdk}"
+
+                echo "jdk installation path is: ${jdk}"
+
+                // next 2 are equivalents
+                sh "${jdk}/bin/java -version"
+
+                // note that simple quote strings are not evaluated by Groovy
+                // substitution is done by shell script using environment
+                sh '$JAVA_HOME/bin/java -version'
+            }
+        }
+    }
+}
